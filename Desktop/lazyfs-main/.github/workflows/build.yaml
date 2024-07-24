@@ -1,0 +1,66 @@
+name: build
+on: 
+  push:
+    paths:
+      - 'lazyfs/**'
+      - 'libs/**'
+      - 'tests/lfscheck/**'
+      - '.github/workflows/**'
+jobs:
+    build-repo:
+        runs-on: ubuntu-latest
+        env:
+          LAZYFS_TEST_MOUNT_DIR: "/tmp/lfs.mnt/"
+          LAZYFS_TEST_ROOT_DIR: "/tmp/lfs.root/"
+        steps:
+            - name: Check out repository code
+              uses: actions/checkout@v2
+
+            - name: Set up cache
+              uses: actions/cache@v2
+              with:
+                  path: ~/build
+                  key: build-lazyfs
+
+            - name: Install LazyFS's dependencies
+              run: sudo apt install g++ cmake libfuse3-dev libfuse3-3 fuse3 tree
+
+            - name: Configure FUSE
+              run: sudo sed -i "/\\s*user_allow_other/s/^#//g" "/etc/fuse.conf"
+
+            - name: Build libpcache
+              run: cd libs/libpcache && ./build.sh && cd -
+
+            - name: Build lazyfs (and tests)
+              run: |
+                sed -i 's/cmake \-DLAZYFS\_BUILD\_TESTS\=OFF \.\./cmake \-DLAZYFS\_\BUILD\_\TESTS\=ON \.\./g' lazyfs/build.sh
+                cd lazyfs && ./build.sh && cd -
+                cd tests/lfscheck && ./build.sh && cd -
+
+            - name: Run unit tests
+              env:
+                UNIT_TESTS_CACHE_SIZE: "1mb"
+                UNIT_TESTS_FIFO_PATH: "/tmp/lfs.unit.fifo"
+              run: |
+                sudo sed -i "s|fifo_path=.*|fifo_path=\"${UNIT_TESTS_FIFO_PATH}\"|" lazyfs/config/default.toml
+                sudo sed -i "s|custom_size=.*|custom_size=\"${UNIT_TESTS_CACHE_SIZE}\"|" lazyfs/config/default.toml
+                sudo sed -s -i "s|\#define.*FAULTS_PIPE_PATH.*|\#define FAULTS_PIPE_PATH \"${UNIT_TESTS_FIFO_PATH}\"|" lazyfs/unit/*_clear_cache.cpp
+                cd lazyfs/scripts && ./run-tests.sh -m ${LAZYFS_TEST_MOUNT_DIR} -r ${LAZYFS_TEST_ROOT_DIR} && cd -
+
+            - name: Run consistency tests
+              env:
+                CONSISTENCY_TESTS_CACHE_SIZE: "1gb"
+                CONSISTENCY_TESTS_FIFO_PATH: "/tmp/lfs.consistency.fifo"
+                CONSISTENCY_TESTS_TEST_TIME: 30
+                CONSISTENCY_TESTS_TEST_NR_THREADS: 5
+                CONSISTENCY_TESTS_TEST_BURST: 1000
+                CONSISTENCY_TESTS_TEST_MAX_WRITE: 4096
+              run: |
+                mkdir -p ${LAZYFS_TEST_MOUNT_DIR} ${LAZYFS_TEST_ROOT_DIR}
+                sudo rm -rf ${LAZYFS_TEST_MOUNT_DIR}* ${LAZYFS_TEST_ROOT_DIR}*
+                sudo sed -i "s|fifo_path=.*|fifo_path=\"${CONSISTENCY_TESTS_FIFO_PATH}\"|" lazyfs/config/default.toml
+                sudo sed -i "s|custom_size=.*|custom_size=\"${CONSISTENCY_TESTS_CACHE_SIZE}\"|" lazyfs/config/default.toml
+                cd lazyfs && ./scripts/mount-lazyfs.sh -m ${LAZYFS_TEST_MOUNT_DIR} -r ${LAZYFS_TEST_ROOT_DIR} -c config/default.toml && cd -
+                sleep 2s
+                ./tests/lfscheck/build/lfscheck -m ${LAZYFS_TEST_MOUNT_DIR} -f ${CONSISTENCY_TESTS_FIFO_PATH} -t ${CONSISTENCY_TESTS_TEST_TIME} -n ${CONSISTENCY_TESTS_TEST_NR_THREADS} -b ${CONSISTENCY_TESTS_TEST_BURST} -max ${CONSISTENCY_TESTS_TEST_MAX_WRITE}
+                fusermount -uz ${LAZYFS_TEST_MOUNT_DIR}
