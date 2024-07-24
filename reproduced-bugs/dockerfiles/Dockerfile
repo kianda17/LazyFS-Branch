@@ -37,12 +37,13 @@ COPY ${aux_path} .
 COPY ${install_script} .
 
 # Install and build LazyFS
-RUN git clone https://github.com/kianda17/LazyFS-Branch lazyfs && \
-    cd lazyfs && \
+RUN git clone https://github.com/kianda17/LazyFS-Branch lazyfs
+RUN cd lazyfs && \
     cd libs/libpcache && \
     chmod +x build.sh && \
     ./build.sh && \
     cd ../../lazyfs && \
+    chmod +x build.sh && \
     ./build.sh
 
 # Make the script executable
