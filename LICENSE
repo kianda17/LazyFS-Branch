@@ -1,0 +1,46 @@
+Copyright (C) 2023, INESC TEC
+
+LazyFS: A FUSE Filesystem with its own internal page cache, which can be used 
+to simulate failures on un-synced writes. On command, LazyFS is able to drop 
+any cached data and therefore simulate a power failure to test if applications 
+are fsyncing as often as they should.
+
+This software is authored by:
+João Pedro Rodrigues Azevedo
+
+This program makes use and is distributed with the following libraries:
+1. fusepp (https://github.com/jachappell/Fusepp)
+2. toml11 (https://github.com/ToruNiina/toml11)
+3. libfuse (https://github.com/libfuse/libfuse)
+4. spdlog (https://github.com/gabime/spdlog)
+5. gtest (https://github.com/google/googletest)
+6. argparse (https://github.com/p-ranav/argparse)
+
+You can reach INESC TEC Technology Licensing Office (TLO) at info.sal@inesctec.pt, or
+Campus da Faculdade de Engenharia da Universidade do Porto
+Rua Dr. Roberto Frias
+4200-465 Porto
+Portugal
+
+If you use LazyFS in a work that leads to a scientific publication, we would 
+appreciate it if you would kindly cite it in your manuscript.
+
+Licensed under the terms of MIT License
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
