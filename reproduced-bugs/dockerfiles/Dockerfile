@@ -40,6 +40,7 @@ COPY ${install_script} .
 RUN git clone https://github.com/kianda17/LazyFS-Branch lazyfs && \
     cd lazyfs && \
     cd libs/libpcache && \
+    chmod +x build.sh && \
     ./build.sh && \
     cd ../../lazyfs && \
     ./build.sh
