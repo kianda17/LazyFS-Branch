@@ -44,7 +44,9 @@ RUN cd lazyfs && \
     ./build.sh && \
     cd ../../lazyfs && \
     chmod +x build.sh && \
-    ./build.sh
+    ./build.sh && \
+    cd scripts && \
+    chmod +x *.sh
 
 # Make the script executable
 RUN chmod +x *.sh
